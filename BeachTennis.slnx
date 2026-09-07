@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="BeachTennis.Api/BeachTennis.Api.csproj" />
+  <Project Path="BeachTennis.Application/BeachTennis.Application.csproj" />
+  <Project Path="BeachTennis.Domain/BeachTennis.Domain.csproj" />
+  <Project Path="BeachTennis.Infrastructure/BeachTennis.Infrastructure.csproj" />
+</Solution>

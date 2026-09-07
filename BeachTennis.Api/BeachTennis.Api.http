@@ -1,0 +1,6 @@
+@BeachTennis.Api_HostAddress = http://localhost:5030
+
+GET {{BeachTennis.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

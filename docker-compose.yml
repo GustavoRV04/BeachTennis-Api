@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # Serviço do Banco de Dados PostgreSQL
+  beachtennis-db:
+    image: postgres:15-alpine
+    container_name: beachtennis-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: senha_beachtennis
+      POSTGRES_DB: BeachTennisDb
+    ports:
+      - "5433:5432"
+    volumes:
+      - beachtennis-db-data:/var/lib/postgresql/data
+    networks:
+      - beachtennis-network
+
+  # Serviço do pgAdmin 4 (Gerenciador do Banco)
+  beachtennis-pgadmin:
+    image: dpage/pgadmin4
+    container_name: beachtennis-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8090:80"
+    depends_on:
+      - beachtennis-db
+    networks:
+      - beachtennis-network
+
+volumes:
+  beachtennis-db-data:
+
+networks:
+  beachtennis-network:
