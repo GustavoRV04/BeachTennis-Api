@@ -7,4 +7,5 @@ public interface IQuadraRepository
     Task<Quadra?> ObterPorIdAsync(Guid id);
     Task<List<Quadra>> ListarAtivasAsync();
     Task AdicionarAsync(Quadra quadra);
+    Task SalvarAsync();
 }

@@ -17,6 +17,8 @@ public class QuadraRepository : IQuadraRepository
     public Task<List<Quadra>> ListarAtivasAsync()
         => _context.Quadras.Where(q => q.Ativa).ToListAsync();
 
+    public Task SalvarAsync() => _context.SaveChangesAsync();
+
     public async Task AdicionarAsync(Quadra quadra)
         => await _context.Quadras.AddAsync(quadra);
 }

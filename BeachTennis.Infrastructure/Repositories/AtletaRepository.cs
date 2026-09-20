@@ -15,8 +15,10 @@ public class AtletaRepository : IAtletaRepository
         => await _context.Atletas.FirstOrDefaultAsync(a => a.Id == id);
 
     // ALTERAÇÃO AQUI: Retorna a lista completa de atletas sem o filtro ".Where(a => a.Ativo)"
-    public async Task<List<Atleta>> ListarAtivosAsync()
+    public async Task<List<Atleta>> ListarAsync()
         => await _context.Atletas.ToListAsync();
+
+    public Task SalvarAsync() => _context.SaveChangesAsync();
 
     public async Task AdicionarAsync(Atleta atleta)
         => await _context.Atletas.AddAsync(atleta);
