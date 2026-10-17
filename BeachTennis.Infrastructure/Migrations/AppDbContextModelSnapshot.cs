@@ -32,6 +32,11 @@ namespace BeachTennis.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsAdmin")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasColumnType("text");

@@ -5,3 +5,7 @@ public record CriarReservaDto(Guid QuadraId, Guid AtletaId, DateTime Inicio, Dat
 public record ReservaResponseDto(
     Guid Id, Guid QuadraId, Guid AtletaId,
     DateTime Inicio, DateTime Fim, decimal Valor, string Status);
+
+public record DisponibilidadeReservaDto(Guid QuadraId, DateTime Inicio, DateTime Fim, string Status);
+
+public record AgendarReservaRequestDto(Guid QuadraId, DateTime Inicio, DateTime Fim);

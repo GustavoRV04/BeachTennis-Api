@@ -23,6 +23,7 @@ public class AppDbContext : DbContext
         {
             b.HasKey(a => a.Id);
             b.Property(a => a.Email).IsRequired();
+            b.Property(a => a.IsAdmin).HasDefaultValue(false);
             b.HasIndex(a => a.Email).IsUnique();
         });
 

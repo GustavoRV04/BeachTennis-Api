@@ -4,6 +4,9 @@ namespace BeachTennis.Domain.Entities;
 
 public class Reserva
 {
+    private static readonly TimeZoneInfo FusoDaArena = TimeZoneInfo.FindSystemTimeZoneById(
+        OperatingSystem.IsWindows() ? "E. South America Standard Time" : "America/Sao_Paulo");
+
     public Guid Id { get; private set; }
     public Guid QuadraId { get; private set; }
     public Guid AtletaId { get; private set; }
@@ -28,9 +31,15 @@ public class Reserva
         ValorCobrado = CalcularValor(inicio);
     }
 
-    // Regra de negócio do ADR: R$ 100 antes das 18h, R$ 120 depois das 18h
+    // Os horários recebidos pela API são instantes UTC; a regra comercial usa o horário local da arena.
     private static decimal CalcularValor(DateTime inicio)
-        => inicio.Hour < 18 ? 100m : 120m;
+    {
+        var horarioLocal = inicio.Kind == DateTimeKind.Unspecified
+            ? TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(inicio, DateTimeKind.Utc), FusoDaArena)
+            : TimeZoneInfo.ConvertTime(inicio, FusoDaArena);
+
+        return horarioLocal.Hour < 18 ? 100m : 120m;
+    }
 
     public void Cancelar() => Status = StatusReserva.Cancelada;
 }

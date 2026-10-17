@@ -20,6 +20,12 @@ public class ReservaRepository : IReservaRepository
             .Where(r => r.DataHoraInicio >= inicioSemana && r.DataHoraInicio < fimSemana)
             .ToListAsync();
 
+    public Task<List<Reserva>> ListarPorAtletaAsync(Guid atletaId)
+        => _context.Reservas
+            .Where(r => r.AtletaId == atletaId)
+            .OrderByDescending(r => r.DataHoraInicio)
+            .ToListAsync();
+
     public Task<bool> ExisteConflitoAsync(Guid quadraId, DateTime inicio, DateTime fim)
         => _context.Reservas.AnyAsync(r =>
             r.QuadraId == quadraId &&

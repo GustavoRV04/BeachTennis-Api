@@ -11,18 +11,34 @@ public class CriarAtletaUseCase
 
     public async Task<AtletaResponseDto> ExecutarAsync(CriarAtletaDto dto)
     {
-        var existente = await _repo.ObterPorEmailAsync(dto.Email);
+        var email = dto.Email.Trim().ToLowerInvariant();
+        var existente = await _repo.ObterPorEmailAsync(email);
         if (existente is not null)
             throw new InvalidOperationException("Já existe um atleta cadastrado com este e-mail.");
 
-        // Hash simples por enquanto — trocar por BCrypt/Identity quando entrar o login (JWT)
         var senhaHash = BCrypt.Net.BCrypt.HashPassword(dto.Senha);
 
-        var atleta = new Atleta(dto.Nome, dto.Email, senhaHash);
+        var atleta = new Atleta(dto.Nome.Trim(), email, senhaHash);
         await _repo.AdicionarAsync(atleta);
         await _repo.SalvarAsync();
 
         return new AtletaResponseDto(atleta.Id, atleta.Nome, atleta.Email);
+    }
+}
+
+public class AutenticarAtletaUseCase
+{
+    private readonly IAtletaRepository _repo;
+
+    public AutenticarAtletaUseCase(IAtletaRepository repo) => _repo = repo;
+
+    public async Task<Atleta?> ExecutarAsync(string email, string senha)
+    {
+        var atleta = await _repo.ObterPorEmailAsync(email.Trim().ToLowerInvariant());
+        if (atleta is null || !BCrypt.Net.BCrypt.Verify(senha, atleta.SenhaHash))
+            return null;
+
+        return atleta;
     }
 }
 
