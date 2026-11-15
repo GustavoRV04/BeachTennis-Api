@@ -102,13 +102,53 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+static string? ValidarQuadra(
+    string nome,
+    string descricao,
+    string cobertura,
+    string[] comodidades,
+    string? imagemUrl,
+    List<HorarioQuadraDto> horarios)
+{
+    if (string.IsNullOrWhiteSpace(nome) || nome.Length > 100)
+        return "Informe um nome com até 100 caracteres.";
+    if (descricao is null || descricao.Length > 1000)
+        return "A descrição deve ter até 1.000 caracteres.";
+    if (cobertura is not ("Coberta" or "Semi-coberta" or "Ao ar livre"))
+        return "Selecione um tipo de cobertura válido.";
+    if (comodidades is null || comodidades.Length > 12
+        || comodidades.Any(item => string.IsNullOrWhiteSpace(item) || item.Length > 60))
+        return "Informe até 12 comodidades, com no máximo 60 caracteres cada.";
+    if (imagemUrl is { Length: > 2048 }
+        || (!string.IsNullOrWhiteSpace(imagemUrl)
+            && (!Uri.TryCreate(imagemUrl, UriKind.Absolute, out var imageUri)
+                || imageUri.Scheme is not ("http" or "https"))))
+        return "Informe uma URL de imagem HTTP ou HTTPS válida.";
+    if (horarios is null || horarios.Count != 7
+        || horarios.Any(horario => !Enum.IsDefined(horario.DiaSemana))
+        || horarios.Select(horario => horario.DiaSemana).Distinct().Count() != 7)
+        return "Configure exatamente um horário para cada dia da semana.";
+    if (horarios.Any(horario =>
+        (horario.Aberta && horario.FechaAs <= horario.AbreAs)
+        || horario.ValorHoraAntesDasDezoito < 0
+        || horario.ValorHoraAposDezoito < 0
+        || horario.ValorHoraAntesDasDezoito > 66_666_666.66m
+        || horario.ValorHoraAposDezoito > 66_666_666.66m))
+        return "Confira os horários de funcionamento e os valores por hora.";
+
+    return null;
+}
+
 // --- Endpoints de Quadras ---
 app.MapGet("/api/quadras", async (ListarQuadrasUseCase useCase) =>
     Results.Ok(await useCase.ExecutarAsync()));
 
+app.MapGet("/api/admin/quadras/configuracao", () => Results.Ok(new { versao = 1 }))
+    .RequireAuthorization("Admin");
+
 app.MapGet("/api/admin/quadras", async (IQuadraRepository repository) =>
     Results.Ok((await repository.ListarTodasAsync())
-        .Select(quadra => new QuadraResponseDto(quadra.Id, quadra.Nome, quadra.Ativa))))
+        .Select(QuadraResponseDto.From)))
     .RequireAuthorization("Admin");
 
 app.MapGet("/api/quadras/{id:guid}", async (Guid id, ObterQuadraUseCase useCase) =>
@@ -119,8 +159,9 @@ app.MapGet("/api/quadras/{id:guid}", async (Guid id, ObterQuadraUseCase useCase)
 
 app.MapPost("/api/quadras", async (CriarQuadraDto dto, CriarQuadraUseCase useCase) =>
 {
-    if (string.IsNullOrWhiteSpace(dto.Nome))
-        return Results.BadRequest(new { mensagem = "Informe o nome da quadra." });
+    var validationError = ValidarQuadra(dto.Nome, dto.Descricao, dto.Cobertura, dto.Comodidades, dto.ImagemUrl, dto.Horarios);
+    if (validationError is not null)
+        return Results.BadRequest(new { mensagem = validationError });
 
     var resultado = await useCase.ExecutarAsync(dto);
     return Results.Created($"/api/quadras/{resultado.Id}", resultado);
@@ -128,8 +169,9 @@ app.MapPost("/api/quadras", async (CriarQuadraDto dto, CriarQuadraUseCase useCas
 
 app.MapPut("/api/quadras/{id:guid}", async (Guid id, AtualizarQuadraDto dto, AtualizarQuadraUseCase useCase) =>
 {
-    if (string.IsNullOrWhiteSpace(dto.Nome))
-        return Results.BadRequest(new { mensagem = "Informe o nome da quadra." });
+    var validationError = ValidarQuadra(dto.Nome, dto.Descricao, dto.Cobertura, dto.Comodidades, dto.ImagemUrl, dto.Horarios);
+    if (validationError is not null)
+        return Results.BadRequest(new { mensagem = validationError });
 
     var sucesso = await useCase.ExecutarAsync(id, dto);
     return sucesso ? Results.NoContent() : Results.NotFound();
@@ -243,6 +285,10 @@ app.MapPost("/api/reservas", async (
     catch (ReservaConflitanteException ex)
     {
         return Results.Conflict(new { mensagem = ex.Message });
+    }
+    catch (ReservaInvalidaException ex)
+    {
+        return Results.BadRequest(new { mensagem = ex.Message });
     }
 }).RequireAuthorization("Athlete");
 

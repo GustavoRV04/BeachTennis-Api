@@ -53,6 +53,34 @@ namespace BeachTennis.Infrastructure.Migrations
                     b.ToTable("Atletas");
                 });
 
+            modelBuilder.Entity("BeachTennis.Domain.Entities.HorarioQuadra", b =>
+                {
+                    b.Property<Guid>("QuadraId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DiaSemana")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Aberta")
+                        .HasColumnType("boolean");
+
+                    b.Property<TimeOnly>("AbreAs")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<TimeOnly>("FechaAs")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<decimal>("ValorHoraAntesDasDezoito")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal>("ValorHoraAposDezoito")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("QuadraId", "DiaSemana");
+
+                    b.ToTable("HorarioQuadra");
+                });
+
             modelBuilder.Entity("BeachTennis.Domain.Entities.Quadra", b =>
                 {
                     b.Property<Guid>("Id")
@@ -61,6 +89,30 @@ namespace BeachTennis.Infrastructure.Migrations
 
                     b.Property<bool>("Ativa")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("Cobertura")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("Ao ar livre");
+
+                    b.PrimitiveCollection<string[]>("Comodidades")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValue(new string[0]);
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("ImagemUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
 
                     b.Property<string>("Nome")
                         .IsRequired()
@@ -101,6 +153,20 @@ namespace BeachTennis.Infrastructure.Migrations
                     b.HasIndex("QuadraId", "DataHoraInicio", "DataHoraFim");
 
                     b.ToTable("Reservas");
+                });
+
+            modelBuilder.Entity("BeachTennis.Domain.Entities.HorarioQuadra", b =>
+                {
+                    b.HasOne("BeachTennis.Domain.Entities.Quadra", null)
+                        .WithMany("Horarios")
+                        .HasForeignKey("QuadraId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BeachTennis.Domain.Entities.Quadra", b =>
+                {
+                    b.Navigation("Horarios");
                 });
 #pragma warning restore 612, 618
         }

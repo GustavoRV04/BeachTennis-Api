@@ -12,13 +12,13 @@ public class QuadraRepository : IQuadraRepository
     public QuadraRepository(AppDbContext context) => _context = context;
 
     public Task<Quadra?> ObterPorIdAsync(Guid id)
-        => _context.Quadras.FirstOrDefaultAsync(q => q.Id == id);
+        => _context.Quadras.Include(q => q.Horarios).FirstOrDefaultAsync(q => q.Id == id);
 
     public Task<List<Quadra>> ListarAtivasAsync()
-        => _context.Quadras.Where(q => q.Ativa).ToListAsync();
+        => _context.Quadras.Include(q => q.Horarios).Where(q => q.Ativa).ToListAsync();
 
     public Task<List<Quadra>> ListarTodasAsync()
-        => _context.Quadras.ToListAsync();
+        => _context.Quadras.Include(q => q.Horarios).ToListAsync();
 
     public Task SalvarAsync() => _context.SaveChangesAsync();
 

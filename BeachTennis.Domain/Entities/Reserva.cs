@@ -4,9 +4,6 @@ namespace BeachTennis.Domain.Entities;
 
 public class Reserva
 {
-    private static readonly TimeZoneInfo FusoDaArena = TimeZoneInfo.FindSystemTimeZoneById(
-        OperatingSystem.IsWindows() ? "E. South America Standard Time" : "America/Sao_Paulo");
-
     public Guid Id { get; private set; }
     public Guid QuadraId { get; private set; }
     public Guid AtletaId { get; private set; }
@@ -17,7 +14,7 @@ public class Reserva
 
     protected Reserva() { }
 
-    public Reserva(Guid quadraId, Guid atletaId, DateTime inicio, DateTime fim)
+    public Reserva(Guid quadraId, Guid atletaId, DateTime inicio, DateTime fim, decimal valorCobrado)
     {
         if (fim <= inicio)
             throw new ArgumentException("O horário final deve ser depois do inicial.");
@@ -28,17 +25,10 @@ public class Reserva
         DataHoraInicio = inicio;
         DataHoraFim = fim;
         Status = StatusReserva.Confirmada;
-        ValorCobrado = CalcularValor(inicio);
-    }
+        if (valorCobrado < 0)
+            throw new ArgumentOutOfRangeException(nameof(valorCobrado));
 
-    // Os horários recebidos pela API são instantes UTC; a regra comercial usa o horário local da arena.
-    private static decimal CalcularValor(DateTime inicio)
-    {
-        var horarioLocal = inicio.Kind == DateTimeKind.Unspecified
-            ? TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(inicio, DateTimeKind.Utc), FusoDaArena)
-            : TimeZoneInfo.ConvertTime(inicio, FusoDaArena);
-
-        return horarioLocal.Hour < 18 ? 100m : 120m;
+        ValorCobrado = valorCobrado;
     }
 
     public void Cancelar() => Status = StatusReserva.Cancelada;

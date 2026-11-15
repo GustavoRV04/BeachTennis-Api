@@ -55,6 +55,26 @@ A API inicia em `http://localhost:5030` pelo perfil HTTP. O front-end Vite (`htt
 
 Para cadastrar quadras iniciais, use `POST /api/quadras` no Swagger durante o desenvolvimento.
 
+## Configuração de quadras
+
+Administradores podem configurar descrição, cobertura, comodidades, URL de imagem, funcionamento por dia da semana e dois preços por hora (antes e a partir das 18h) para cada quadra. Reservas continuam com duração fixa de 90 minutos; a API valida o dia, o horário de funcionamento e o intervalo contado desde a abertura, e calcula o total usando o preço do horário de início.
+
+Depois de atualizar o código, aplique a migration `ConfigureCourtDetailsAndSchedule` com `dotnet ef database update`. Ela adiciona os campos de apresentação e cria horários padrão (todos os dias, das 07h às 23h, R$ 100/h antes das 18h e R$ 120/h a partir das 18h) para as quadras existentes.
+
+Para testar, use uma base de desenvolvimento separada. Não aponte o comando de migration para o banco de produção sem revisar e aprovar a alteração de esquema.
+
+### Ordem de atualização no Render e Supabase
+
+A versão antiga da API não aplica migrations automaticamente. Para publicar esta alteração sem deixar o serviço novo consultar colunas ainda inexistentes:
+
+1. Faça backup do banco e revise o SQL da migration.
+2. Aplique `ConfigureCourtDetailsAndSchedule` no Supabase antes de publicar a nova versão da API. Use uma sessão de manutenção autorizada com a connection string de produção; não a grave em arquivos ou comandos salvos no Git.
+3. Publique o repositório da API no branch monitorado pelo Render e aguarde o deploy terminar.
+4. Verifique `GET /api/quadras` e, autenticado como administrador, `GET /api/admin/quadras/configuracao`.
+5. Publique o front-end no Vercel. A variável `VITE_API_URL` deve continuar apontando para a URL base da API no Render, sem `/api`.
+
+O deploy da nova API antes da migration pode interromper os endpoints de quadras e reservas. A migration adiciona colunas e horários padrão para os registros existentes; ela não deve ser executada automaticamente durante o boot do serviço.
+
 ## Publicação: Render, Supabase e Vercel
 
 O Vercel publica o front-end Vite, não executa esta API ASP.NET. Para a demonstração, a configuração prevista é:

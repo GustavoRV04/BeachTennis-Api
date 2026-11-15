@@ -11,10 +11,17 @@ public class CriarQuadraUseCase
 
     public async Task<QuadraResponseDto> ExecutarAsync(CriarQuadraDto dto)
     {
-        var quadra = new Quadra(dto.Nome);
+        var horarios = dto.Horarios.Select(horario => new HorarioQuadra(
+            horario.DiaSemana,
+            horario.Aberta,
+            horario.AbreAs,
+            horario.FechaAs,
+            horario.ValorHoraAntesDasDezoito,
+            horario.ValorHoraAposDezoito));
+        var quadra = new Quadra(dto.Nome, dto.Descricao, dto.Cobertura, dto.Comodidades, dto.ImagemUrl, horarios);
         await _repo.AdicionarAsync(quadra);
         await _repo.SalvarAsync();
-        return new QuadraResponseDto(quadra.Id, quadra.Nome, quadra.Ativa);
+        return QuadraResponseDto.From(quadra);
     }
 }
 
@@ -26,7 +33,7 @@ public class ListarQuadrasUseCase
     public async Task<List<QuadraResponseDto>> ExecutarAsync()
     {
         var quadras = await _repo.ListarAtivasAsync();
-        return quadras.Select(q => new QuadraResponseDto(q.Id, q.Nome, q.Ativa)).ToList();
+        return quadras.Select(QuadraResponseDto.From).ToList();
     }
 }
 
@@ -38,7 +45,7 @@ public class ObterQuadraUseCase
     public async Task<QuadraResponseDto?> ExecutarAsync(Guid id)
     {
         var quadra = await _repo.ObterPorIdAsync(id);
-        return quadra is null ? null : new QuadraResponseDto(quadra.Id, quadra.Nome, quadra.Ativa);
+        return quadra is null ? null : QuadraResponseDto.From(quadra);
     }
 }
 
@@ -52,7 +59,14 @@ public class AtualizarQuadraUseCase
         var quadra = await _repo.ObterPorIdAsync(id);
         if (quadra is null) return false;
 
-        quadra.AtualizarNome(dto.Nome);
+        var horarios = dto.Horarios.Select(horario => new HorarioQuadra(
+            horario.DiaSemana,
+            horario.Aberta,
+            horario.AbreAs,
+            horario.FechaAs,
+            horario.ValorHoraAntesDasDezoito,
+            horario.ValorHoraAposDezoito));
+        quadra.AtualizarDados(dto.Nome, dto.Descricao, dto.Cobertura, dto.Comodidades, dto.ImagemUrl, horarios);
         await _repo.SalvarAsync();
         return true;
     }

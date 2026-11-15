@@ -17,6 +17,24 @@ public class AppDbContext : DbContext
         {
             b.HasKey(q => q.Id);
             b.Property(q => q.Nome).IsRequired().HasMaxLength(100);
+            b.Property(q => q.Descricao).HasMaxLength(1000).HasDefaultValue(string.Empty);
+            b.Property(q => q.Cobertura).IsRequired().HasMaxLength(30).HasDefaultValue("Ao ar livre");
+            b.Property(q => q.Comodidades).HasColumnType("text[]").HasDefaultValue(Array.Empty<string>());
+            b.Property(q => q.ImagemUrl).HasMaxLength(2048);
+            b.HasMany(q => q.Horarios)
+                .WithOne()
+                .HasForeignKey(horario => horario.QuadraId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<HorarioQuadra>(b =>
+        {
+            b.HasKey(horario => new { horario.QuadraId, horario.DiaSemana });
+            b.Property(horario => horario.DiaSemana).HasConversion<int>();
+            b.Property(horario => horario.AbreAs).HasColumnType("time without time zone");
+            b.Property(horario => horario.FechaAs).HasColumnType("time without time zone");
+            b.Property(horario => horario.ValorHoraAntesDasDezoito).HasColumnType("decimal(10,2)");
+            b.Property(horario => horario.ValorHoraAposDezoito).HasColumnType("decimal(10,2)");
         });
 
         modelBuilder.Entity<Atleta>(b =>
